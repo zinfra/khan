@@ -91,4 +91,4 @@ update (names -> n@Names{..}) tpath ppath = do
     created (Right _) = return True
     created e         = verifyIAM "EntityAlreadyExists" e >> return False
 
-    delay = 5
+    delay = 8
