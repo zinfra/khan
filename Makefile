@@ -61,7 +61,7 @@ cabal.sandbox.config:
 	cabal sandbox init
 
 vendor/%:
-	git clone https://github.com/brendanhay/$*.git $@
+	git clone https://github.com/zinfra/$*.git $@
 
 link: bin/khan bin/khan-metadata-sync
 
