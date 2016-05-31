@@ -59,7 +59,7 @@ wait s addr user key = do
          | otherwise = do
              say "Waiting {} seconds..." [delay]
              delaySeconds delay
-             e <- runEitherT . sync $ exec "ssh" xs
+             e <- runExceptT . sync $ exec "ssh" xs
              either (const . go $ n - delay)
                     (return . const True)
                     e

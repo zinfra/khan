@@ -70,41 +70,42 @@ library
     build-depends:
         aeson                >= 0.7
       , aeson-pretty
-      , amazonka             >= 0.5.0
+      , amazonka-limited     >= 0.5.0
       , ansi-wl-pprint
       , attoparsec
       , base                 >= 4.7    && < 5
-      , base16-bytestring    == 0.1.*
-      , bifunctors           >= 4.1    && < 5
-      , byteable             == 0.1.*
+      , base16-bytestring    >= 0.1
+      , bifunctors           >= 4.1
+      , byteable             >= 0.1
       , bytestring
-      , case-insensitive     >= 1.2    && < 2
+      , case-insensitive     >= 1.2
       , conduit              >= 1.1
       , conduit-extra
-      , cryptohash           == 0.11.*
-      , cryptohash-conduit   == 0.1.*
+      , cryptohash           >= 0.11
+      , cryptohash-conduit   >= 0.1
       , ede                  >= 0.2.3
       , errors
       , hashable
-      , http-client          == 0.3.*
+      , http-client          >= 0.3
       , http-conduit
       , http-types
-      , lens-family-core     == 1.1.*
+      , lens-family-core     >= 1.1
       , mtl                  >= 2.2.1
       , network
       , old-locale
-      , optparse-applicative == 0.11.*
+      , optparse-applicative >= 0.11
       , prelude-prime
       , process              >= 1.2
       , random
       , semigroups
-      , semver               == 0.3.*
+      , semver               >= 0.3
       , system-fileio
       , system-filepath      >= 0.4.9
       , text                 >= 1.0
       , text-format
       , time
-      , transformers         == 0.4.*
+      , transformers         >= 0.4
+      , unexceptionalio      >= 0.3
       , unix
       , unordered-containers
 
@@ -135,7 +136,7 @@ executable khan
     build-depends:
         aeson
       , aeson-pretty
-      , amazonka
+      , amazonka-limited
       , ansi-wl-pprint
       , base
       , bytestring
@@ -152,6 +153,7 @@ executable khan
       , text-format
       , text-manipulate
       , time
+      , unexceptionalio
       , unix
       , unordered-containers
 

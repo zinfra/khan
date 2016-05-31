@@ -84,7 +84,7 @@ data Command where
 
 class Options a where
     discover :: Bool -> Common -> a -> AWS a
-    validate :: MonadIO m => a -> EitherT AWSError m ()
+    validate :: MonadIO m => a -> ExceptT AWSError m ()
 
     discover _ _ = return
     validate     = void . return
@@ -278,18 +278,18 @@ rKeysOption env = RKeysBucket <$> textOption "remote-keys"
    <> short 'K'
     ) "Bucket to retrieve/store certificates."
 
-check :: (MonadIO m, Invalid a) => a -> String -> EitherT AWSError m ()
-check x = when (invalid x) . throwT . Err
+check :: (MonadIO m, Invalid a) => a -> String -> ExceptT AWSError m ()
+check x = when (invalid x) . throwE . Err
 
-checkIO :: (MonadIO m, Invalid a) => IO a -> String -> EitherT AWSError m ()
+checkIO :: (MonadIO m, Invalid a) => IO a -> String -> ExceptT AWSError m ()
 checkIO io e = liftIO io >>= (`check` e)
 
-checkDir :: MonadIO m => FilePath -> String -> EitherT AWSError m ()
+checkDir :: MonadIO m => FilePath -> String -> ExceptT AWSError m ()
 checkDir p e = check p msg >> checkIO (not <$> FS.isDirectory p) msg
   where
     msg = Text.unpack ("directory '" <> toTextIgnore p <> "'") ++ e
 
-checkFile :: MonadIO m => FilePath -> String -> EitherT AWSError m ()
+checkFile :: MonadIO m => FilePath -> String -> ExceptT AWSError m ()
 checkFile p e = check p msg >> checkIO (not <$> FS.isFile p) msg
   where
     msg = Text.unpack ("file '" <> toTextIgnore p <> "'") ++ e

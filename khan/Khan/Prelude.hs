@@ -75,7 +75,6 @@ import Data.Time
 import Filesystem.Path.CurrentOS (FilePath, (</>), (<.>), toText)
 import Khan.Prelude.Log          as Log
 import Prelude.Prime             as Prime hiding (FilePath, error, log, writeFile)
-import System.Locale
 
 accessKey, secretKey :: String
 accessKey = "ACCESS_KEY_ID"

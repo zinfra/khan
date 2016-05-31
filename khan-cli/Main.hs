@@ -56,7 +56,7 @@ main = runScript $ do
     when ("--bash-completion-index" `elem` as) . void . liftIO $
         uncurry customExecParser (parserInfo mempty)
 
-    ec2 <- Meta.ec2
+    ec2 <- scriptIO Meta.ec2
     mr  <- regionalise ec2
 
     case parseProgram as es mr of

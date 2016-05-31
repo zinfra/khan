@@ -57,6 +57,7 @@ import           Network.AWS.EC2           as EC2
 import           Network.AWS.EC2.Metadata  (Meta(..))
 import qualified Network.AWS.EC2.Metadata  as Meta
 import           Network.AWS.IAM
+import           UnexceptionalIO           (Unexceptional)
 
 ec2Filter :: Text -> [Text] -> EC2.Filter
 ec2Filter = EC2.Filter
@@ -64,7 +65,7 @@ ec2Filter = EC2.Filter
 asgFilter :: Text -> [Text] -> ASG.Filter
 asgFilter = ASG.Filter
 
-meta :: (Functor m, MonadIO m) => Meta -> EitherT String m Text
+meta :: (Functor m, MonadIO m, Unexceptional m) => Meta -> ExceptT String m Text
 meta = fmap Text.decodeUtf8 . Meta.meta
 
 contextAWS :: MonadIO m => Common -> AWS a -> m (Either AWSError a)
@@ -80,7 +81,7 @@ abbreviate Tokyo           = "tyo"
 abbreviate Sydney          = "syd"
 abbreviate SaoPaulo        = "sao"
 
---liftAWS :: MonadIO m => IO a -> EitherT String m a
+--liftAWS :: MonadIO m => IO a -> ExceptT String m a
 liftAWS :: IO a -> AWS a
 liftAWS = liftEitherT . sync
 
