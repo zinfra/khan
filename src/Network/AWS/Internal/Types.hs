@@ -55,6 +55,7 @@ import           Network.HTTP.Types
 import qualified Text.ParserCombinators.ReadP    as ReadP
 import qualified Text.Read                       as Read
 import           Text.XML.Expat.Pickle.Generic
+import           UnexceptionalIO
 
 class Rq a where
     type Er a
@@ -92,7 +93,7 @@ class Pg a where
     next :: a -> Rs a -> Maybe a
 
 data AWSError = Err String | Ex SomeException | Ers [AWSError]
-    deriving (Show, Typeable)
+    deriving (Show, Generic, Typeable)
 
 instance Exception AWSError
 
@@ -108,8 +109,6 @@ instance Error AWSError where
 
 instance IsString AWSError where
     fromString = Err
-
-instance NFData AWSError
 
 class ToError a where
     toError :: a -> AWSError
@@ -162,7 +161,7 @@ data Env = Env
     }
 
 newtype AWS a = AWS
-    { unwrap :: ReaderT Env (EitherT AWSError IO) a
+    { unwrap :: ReaderT Env (ExceptT AWSError IO) a
     } deriving
         ( Functor
         , Applicative
@@ -178,18 +177,21 @@ newtype AWS a = AWS
         , MonadError AWSError
         )
 
+instance Unexceptional AWS where
+    liftUIO = liftIO . runUIO
+
 instance MonadResource AWS where
     liftResourceT f = AWS $
         fmap awsResource ask >>= liftIO . runInternalState f
     {-# INLINE liftResourceT #-}
 
-instance MonadMask (EitherT AWSError IO) where
-    mask a = EitherT $
-        mask $ \u -> runEitherT (a $ mapEitherT u)
+instance MonadMask (ExceptT AWSError IO) where
+    mask a = ExceptT $
+        mask $ \u -> runExceptT (a $ mapExceptT u)
     {-# INLINE mask #-}
 
-    uninterruptibleMask a = EitherT $
-        uninterruptibleMask $ \u -> runEitherT (a $ mapEitherT u)
+    uninterruptibleMask a = ExceptT $
+        uninterruptibleMask $ \u -> runExceptT (a $ mapExceptT u)
     {-# INLINE uninterruptibleMask #-}
 
 getEnv :: AWS Env
