@@ -24,17 +24,17 @@ build: $(BIN) link
 install: add-sources
 	cabal install -j $(FLAGS) --only-dependencies
 
-test:
+test: cabal.sandbox.config
 	cabal install --enable-tests $(FLAGS)
 
-clean:
+clean: cabal.sandbox.config
 	-rm -rf dist cabal.sandbox.config .cabal-sandbox vendor $(OUT)
 	cabal clean
 	make -C khan-metadata-server clean
 
 dist: install dist/$(DEB) $(SDIST)
 
-$(BIN):
+$(BIN): cabal.sandbox.config
 	cabal build $(addprefix -,$(findstring j,$(MAKEFLAGS)))
 
 $(OUT_CLI): $(BIN_CLI)
