@@ -119,7 +119,9 @@ launch c@Common{..} l@Launch{..} = capture lAnsible c "launch {}" [show lType] $
         Instance.run l ami lType (AZ cRegion z) 1 1 lOptimised
 
     let ids = concatMap (map riitInstanceId) rs
-
+    -- Sometimes tagging will fail with InvalidInstanceID.NotFound. A two
+    -- second delay seems sufficient to avoid this issue.
+    delaySeconds 2
     Tag.instances l lDomain ids
     Instance.wait ids
     return True
