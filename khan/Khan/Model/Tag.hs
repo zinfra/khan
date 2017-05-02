@@ -158,4 +158,5 @@ defaults (names -> Names{..}) dom =
     , (domain, dom)
     , (name,   appName)
     , (weight, "0")
+    , ("P",    "NP")
     ] ++ maybe [] (\v -> [(version, v)]) versionName
