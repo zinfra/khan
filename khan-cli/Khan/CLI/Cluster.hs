@@ -532,7 +532,7 @@ setupScalingPolicies name cpuUp cpuDown = do
     -- Setup Scale up rules
     say "Creating ScaleUp Policy and Alarm for {}" [name]
     pNameUp <- toPolName <$> send (putScalingPolicy name 1)
-    send_ $ putMetricAlarm name pNameUp "Up" "GreaterThanOrEqualToThreshold" 60 cpuUp
+    send_ $ putMetricAlarm name pNameUp "Up" "GreaterThanOrEqualToThreshold" 300 cpuUp
     -- Setup Scale down rules
     say "Creating ScaleDown Policy and Alarm for {}" [name]
     pNameDown <- toPolName <$> send (putScalingPolicy name (-1))
