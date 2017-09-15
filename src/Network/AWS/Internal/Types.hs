@@ -321,9 +321,13 @@ instance IsXML AvailabilityZone where
 
 data InstanceType
     = T1_Micro
+    | T2_Nano
     | T2_Micro
     | T2_Small
     | T2_Medium
+    | T2_Large
+    | T2_XLarge
+    | T2_2XLarge
     | M1_Small
     | M1_Medium
     | M1_Large
@@ -332,11 +336,22 @@ data InstanceType
     | M3_Large
     | M3_XLarge
     | M3_2XLarge
+    | M4_Large
+    | M4_XLarge
+    | M4_2XLarge
+    | M4_4XLarge
+    | M4_10XLarge
+    | M4_16XLarge
     | C3_Large
     | C3_XLarge
     | C3_2XLarge
     | C3_4XLarge
     | C3_8XLarge
+    | C4_Large
+    | C4_XLarge
+    | C4_2XLarge
+    | C4_4XLarge
+    | C4_8XLarge
     | C1_Medium
     | C1_XLarge
     | CC2_8XLarge
@@ -352,19 +367,35 @@ data InstanceType
     | I2_2XLarge
     | I2_4XLarge
     | I2_8XLarge
+    | I3_Large
+    | I3_XLarge
+    | I3_2XLarge
+    | I3_4XLarge
+    | I3_8XLarge
+    | I3_16XLarge
     | R3_Large
     | R3_XLarge
     | R3_2XLarge
     | R3_4XLarge
     | R3_8XLarge
+    | R4_Large
+    | R4_XLarge
+    | R4_2XLarge
+    | R4_4XLarge
+    | R4_8XLarge
+    | R4_16XLarge
       deriving (Eq, Ord, Generic)
 
 instance Show InstanceType where
     show typ = case typ of
         T1_Micro    -> "t1.micro"
+        T2_Nano     -> "t2.nano"
         T2_Micro    -> "t2.micro"
         T2_Small    -> "t2.small"
         T2_Medium   -> "t2.medium"
+        T2_Large    -> "t2.large"
+        T2_XLarge   -> "t2.xlarge"
+        T2_2XLarge  -> "t2.2xlarge"
         M1_Small    -> "m1.small"
         M1_Medium   -> "m1.medium"
         M1_Large    -> "m1.large"
@@ -373,11 +404,22 @@ instance Show InstanceType where
         M3_Large    -> "m3.large"
         M3_XLarge   -> "m3.xlarge"
         M3_2XLarge  -> "m3.2xlarge"
+        M4_Large    -> "m4.large"
+        M4_XLarge   -> "m4.xlarge"
+        M4_2XLarge  -> "m4.2xlarge"
+        M4_4XLarge  -> "m4.4xlarge"
+        M4_10XLarge -> "m4.10xlarge"
+        M4_16XLarge -> "m4.16xlarge"
         C3_Large    -> "c3.large"
         C3_XLarge   -> "c3.xlarge"
         C3_2XLarge  -> "c3.2xlarge"
         C3_4XLarge  -> "c3.4xlarge"
         C3_8XLarge  -> "c3.8xlarge"
+        C4_Large    -> "c4.large"
+        C4_XLarge   -> "c4.xlarge"
+        C4_2XLarge  -> "c4.2xlarge"
+        C4_4XLarge  -> "c4.4xlarge"
+        C4_8XLarge  -> "c4.8xlarge"
         C1_Medium   -> "c1.medium"
         C1_XLarge   -> "c1.xlarge"
         CC2_8XLarge -> "cc2.8xlarge"
@@ -393,18 +435,34 @@ instance Show InstanceType where
         I2_2XLarge  -> "i2.2xlarge"
         I2_4XLarge  -> "i2.4xlarge"
         I2_8XLarge  -> "i2.8xlarge"
+        I3_Large    -> "i3.large"
+        I3_XLarge   -> "i3.xlarge"
+        I3_2XLarge  -> "i3.2xlarge"
+        I3_4XLarge  -> "i3.4xlarge"
+        I3_8XLarge  -> "i3.8xlarge"
+        I3_16XLarge -> "i3.16xlarge"
         R3_Large    -> "r3.large"
         R3_XLarge   -> "r3.xlarge"
         R3_2XLarge  -> "r3.2xlarge"
         R3_4XLarge  -> "r3.4xlarge"
         R3_8XLarge  -> "r3.8xlarge"
+        R4_Large    -> "r4.large"
+        R4_XLarge   -> "r4.xlarge"
+        R4_2XLarge  -> "r4.2xlarge"
+        R4_4XLarge  -> "r4.4xlarge"
+        R4_8XLarge  -> "r4.8xlarge"
+        R4_16XLarge -> "r4.16xlarge"
 
 instance Read InstanceType where
     readPrec = readAssocList
         [ ("t1.micro",    T1_Micro)
+        , ("t2.nano",     T2_Nano)
         , ("t2.micro",    T2_Micro)
         , ("t2.small",    T2_Small)
         , ("t2.medium",   T2_Medium)
+        , ("t2.large",    T2_Nano)
+        , ("t2.xlarge",   T2_Large)
+        , ("t2.2xlarge",  T2_2XLarge)
         , ("m1.small",    M1_Small)
         , ("m1.medium",   M1_Medium)
         , ("m1.large",    M1_Large)
@@ -413,11 +471,22 @@ instance Read InstanceType where
         , ("m3.large",    M3_Large)
         , ("m3.xlarge",   M3_XLarge)
         , ("m3.2xlarge",  M3_2XLarge)
+        , ("m4.large",    M4_Large)
+        , ("m4.xlarge",   M4_XLarge)
+        , ("m4.2xlarge",  M4_2XLarge)
+        , ("m4.4xlarge",  M4_4XLarge)
+        , ("m4.10xlarge", M4_10XLarge)
+        , ("m4.16xlarge", M4_16XLarge)
         , ("c3.large",    C3_Large)
         , ("c3.xlarge",   C3_XLarge)
         , ("c3.2xlarge",  C3_2XLarge)
         , ("c3.4xlarge",  C3_4XLarge)
         , ("c3.8xlarge",  C3_8XLarge)
+        , ("c4.large",    C4_Large)
+        , ("c4.xlarge",   C4_XLarge)
+        , ("c4.2xlarge",  C4_2XLarge)
+        , ("c4.4xlarge",  C4_4XLarge)
+        , ("c4.8xlarge",  C4_8XLarge)
         , ("c1.medium",   C1_Medium)
         , ("c1.xlarge",   C1_XLarge)
         , ("cc2.8xlarge", CC2_8XLarge)
@@ -433,11 +502,23 @@ instance Read InstanceType where
         , ("i2.2xlarge",  I2_2XLarge)
         , ("i2.4xlarge",  I2_4XLarge)
         , ("i2.8xlarge",  I2_8XLarge)
+        , ("i3.large",    I3_Large)
+        , ("i3.xlarge",   I3_XLarge)
+        , ("i3.2xlarge",  I3_2XLarge)
+        , ("i3.4xlarge",  I3_4XLarge)
+        , ("i3.8xlarge",  I3_8XLarge)
+        , ("i3.16xlarge", I3_16XLarge)
         , ("r3.large",    R3_Large)
         , ("r3.xlarge",   R3_XLarge)
         , ("r3.2xlarge",  R3_2XLarge)
         , ("r3.4xlarge",  R3_4XLarge)
         , ("r3.8xlarge",  R3_8XLarge)
+        , ("r4.large",    R4_Large)
+        , ("r4.xlarge",   R4_XLarge)
+        , ("r4.2xlarge",  R4_2XLarge)
+        , ("r4.4xlarge",  R4_4XLarge)
+        , ("r4.8xlarge",  R4_8XLarge)
+        , ("r4.16xlarge", R4_16XLarge)
         ]
 
 instance IsQuery InstanceType where
