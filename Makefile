@@ -1,45 +1,37 @@
-SHELL           := /usr/bin/env bash
-NAME            := khan
-VERSION         := $(shell sed -n 's/^version: *\(.*\)$$/\1/p' $(NAME).cabal)
+SHELL        := /usr/bin/env bash
+NAME         := khan
+VERSION      := $(shell sed -n 's/^version: *\(.*\)$$/\1/p' $(NAME).cabal)
 BUILD_NUMBER ?= 0
-DEB             := $(NAME)_$(VERSION)+$(BUILD_NUMBER)_amd64.deb
-SDIST           := dist/$(NAME)-$(VERSION).tar.gz
-FLAGS           := --disable-documentation --disable-library-coverage
-DEPS            := vendor/amazonka-limited
+BUILD        := $(BUILD_NUMBER)$(shell [ "${BUILD_LABEL}" == "" ] && echo "" || echo ".${BUILD_LABEL}")
+DEB          := $(NAME)_$(VERSION)+$(BUILD_NUMBER)_amd64.deb
 
-BIN_CLI         := dist/build/$(NAME)/$(NAME)
-BIN_SYNC        := dist/build/khan-metadata-sync/khan-metadata-sync
-BIN             := $(BIN_CLI) $(BIN_SYNC)
+OUT_CLI      := dist/$(NAME)
+OUT_SYNC     := dist/khan-metadata-sync
+OUT          := $(OUT_CLI) $(OUT_SYNC)
 
-OUT_CLI         := dist/$(NAME)
-OUT_SYNC        := dist/khan-metadata-sync
-OUT             := $(OUT_CLI) $(OUT_SYNC)
+default: all
 
-.PHONY: $(BIN) $(OUT) clean test
+all: clean install link
 
-all: build
+init:
+	mkdir -p dist
 
-build: $(BIN) link
+.PHONY: clean
+clean:
+	stack clean
+	-rm -rf dist
+	-rm -f .metadata
 
-install: add-sources
-	cabal install -j $(FLAGS) --only-dependencies
+.PHONY:
+compile:
+	stack build --test --no-copy-bins
 
-test: cabal.sandbox.config
-	cabal install --enable-tests $(FLAGS)
+.PHONY: install
+install: init
+	stack install --test --local-bin-path=dist
 
-clean: cabal.sandbox.config
-	cabal clean
-	-rm -rf dist $(OUT)
-	make -C khan-metadata-server clean
-
-distclean: clean
-	cabal sandbox delete
-	-rm -rf vendor
-
-dist: install dist/$(DEB) $(SDIST)
-
-$(BIN): cabal.sandbox.config
-	cabal build $(addprefix -,$(findstring j,$(MAKEFLAGS)))
+.PHONY: dist
+dist: install $(DEB) .metadata
 
 $(OUT_CLI): $(BIN_CLI)
 	strip -o $(OUT_CLI) $<
@@ -47,7 +39,7 @@ $(OUT_CLI): $(BIN_CLI)
 $(OUT_SYNC): $(BIN_SYNC)
 	strip -o $(OUT_SYNC) $<
 
-%.deb: $(OUT)
+$(DEB): $(OUT)
 	makedeb --name=$(NAME) \
 	 --version=$(VERSION) \
 	 --debian-dir=deb \
@@ -55,17 +47,8 @@ $(OUT_SYNC): $(BIN_SYNC)
 	 --architecture=amd64 \
 	 --output-dir=dist
 
-$(SDIST):
-	cabal sdist
-
-add-sources: cabal.sandbox.config $(DEPS)
-	$(foreach dir,$(DEPS),cabal sandbox add-source $(dir);)
-
-cabal.sandbox.config:
-	cabal sandbox init
-
-vendor/%:
-	git clone https://github.com/zinfra/$*.git $@
+.metadata:
+	echo -e "NAME=$(NAME)\nVERSION=$(VERSION)\nBUILD_NUMBER=$(BUILD)" > .metadata
 
 link: bin/khan bin/khan-metadata-sync
 

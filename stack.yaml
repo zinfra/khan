@@ -1,7 +1,10 @@
 resolver: lts-6.31
 packages:
-- vendor/amazonka-limited
 - '.'
+- location:
+    git: https://github.com/zinfra/amazonka-limited
+    commit: 49a7c9b8ba95c71c349b7376003348bc15c0beb7
+  extra-dep: true
 extra-deps:
 - aeson-1.1.1.0
 - base-compat-0.9.3
