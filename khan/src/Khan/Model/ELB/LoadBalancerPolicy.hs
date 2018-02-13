@@ -51,7 +51,7 @@ sslPolicy balancer = CreateLoadBalancerPolicy
   where
     typ = PolicyType "SSLNegotiationPolicyType"
     key = Just "Reference-Security-Policy"
-    val = Just "ELBSecurityPolicy-2016-08"
+    val = Just "ELBSecurityPolicy-TLS-1-2-2017-01"
 
 
 proxyProtocolPolicy :: BalancerName -> CreateLoadBalancerPolicy
