@@ -18,3 +18,4 @@ extra-deps:
 - tagged-0.8.5
 - transformers-compat-0.5.1.4
 - trifecta-1.6.2.1
+allow-newer: true
