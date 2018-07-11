@@ -64,6 +64,12 @@
         {% if lcUserData %}
         <UserData>{{ lcUserData }}</UserData>
         {% endif %}
+        {% if lcClassicLinkVPCId %}
+        <ClassicLinkVPCId>{{ lcClassicLinkVPCId }}</ClassicLinkVPCId>
+        {% endif %}
+        {% if lcClassicLinkVPCSecurityGroups %}
+        <ClassicLinkVPCSecurityGroups>{{ lcClassicLinkVPCSecurityGroups }}</ClassicLinkVPCSecurityGroups>
+        {% endif %}
       </member>
       {% endif %}
     </LaunchConfigurations>

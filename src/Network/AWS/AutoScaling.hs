@@ -305,6 +305,11 @@ data CreateLaunchConfiguration = CreateLaunchConfiguration
       -- instances. For more information about Amazon EC2 user data, see
       -- User Data Retrieval in the Amazon Elastic Compute Cloud User
       -- Guide.
+    , clcClassicLinkVPCId        :: Maybe Text
+      -- ^ The ID of a ClassicLink-enabled VPC to link the instances to.
+    , clcClassicLinkVPCSecurityGroups :: Members Text
+      -- ^ The IDs of one or more security groups for the specified
+      -- ClassicLink-enabled VPC.
     } deriving (Eq, Show, Generic)
 
 instance IsQuery CreateLaunchConfiguration
