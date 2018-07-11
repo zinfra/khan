@@ -46,3 +46,9 @@ SpotPrice={{ clcSpotPrice }}
 {% if clcUserData %}
 UserData={{ clcUserData }}
 {% endif %}
+{% if clcClassicLinkVPCId %}
+ClassicLinkVPCId={{ clcClassicLinkVPCId }}
+{% endif %}
+{% if clcClassicLinkVPCSecurityGroups %}
+ClassicLinkVPCSecurityGroups.member.{{ n }}={{.}}
+{% endif %}

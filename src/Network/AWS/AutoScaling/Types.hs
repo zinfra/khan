@@ -541,6 +541,11 @@ data LaunchConfiguration = LaunchConfiguration
       -- ^ Specifies the price to bid when launching Spot Instances.
     , lcUserData                :: Maybe Text
       -- ^ The user data available to the launched Amazon EC2 instances.
+    , lcClassicLinkVPCId        :: Maybe Text
+      -- ^ The ID of a ClassicLink-enabled VPC to link the instances to.
+    , lcClassicLinkVPCSecurityGroups :: Members Text
+      -- ^ The IDs of one or more security groups for the specified
+      -- ClassicLink-enabled VPC.
     } deriving (Eq, Show, Generic)
 
 instance IsQuery LaunchConfiguration
