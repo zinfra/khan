@@ -216,7 +216,7 @@ instance Header EC2.RunningInstancesItemType where
     header _ = hcols 15
         [ W 8 (H "state:")
         , W 8 (H "weight:")
-        , H "instance-id:"
+        , W 19 (H "instance-id:")
         , H "image-id:"
         , H "public-ip:"
         , H "type:"

@@ -24,8 +24,15 @@ import qualified Khan.Model.EC2.SecurityGroup as Security
 import           Khan.Prelude                 hiding (min, max)
 import           Network.AWS.AutoScaling      hiding (Filter)
 
-create :: Naming a => a -> Text -> InstanceType -> AWS ()
-create (names -> n@Names{..}) ami typ = do
+create
+    :: Naming a
+    => a
+    -> Text              -- ^ AMI
+    -> InstanceType      -- ^ Instance type
+    -> Maybe Text        -- ^ VPC to link instances to
+    -> [Text]            -- ^ VPC security groups
+    -> AWS ()
+create (names -> n@Names{..}) ami typ vpcLink vpcGroups = do
     say "Creating Launch Configuration {}" [appName]
     gs <- Security.defaults n
     c  <- sendCatch CreateLaunchConfiguration
@@ -42,6 +49,8 @@ create (names -> n@Names{..}) ami typ = do
         , clcSecurityGroups          = Members gs
         , clcSpotPrice               = Nothing
         , clcUserData                = Nothing
+        , clcClassicLinkVPCId        = vpcLink
+        , clcClassicLinkVPCSecurityGroups = Members vpcGroups
         }
     verifyAS "AlreadyExists" c
 

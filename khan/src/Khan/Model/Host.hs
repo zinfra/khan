@@ -49,7 +49,7 @@ instance Header Info where
         , W 8  (H "state:")
         , W 8  (H "weight:")
         , W 10 (H "version:")
-        , H "instance-id:"
+        , W 19 (H "instance-id:")
         , H "image-id:"
         , H "type:"
         , W 19 (H "launched:")
