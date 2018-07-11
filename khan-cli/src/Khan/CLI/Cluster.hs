@@ -150,6 +150,11 @@ instance Options Deploy where
         check dEnv   "--env must be specified."
         check dZones "--zones must be specified."
 
+        check (isJust dVpcLink && null dVpcGroups)
+                        "--classiclink-vpc requires at least one --classiclink-group"
+        check (not (null dVpcGroups) && isNothing dVpcLink)
+                        "--classiclink-group requires --classiclink-vpc"
+
         check (dMax < dMin)     "--max must be greater than or equal to --max."
         check (dDesired < dMin) "--desired must be greater than or equal to --min."
         check (dDesired > dMax) "--desired must be less than or equal to --max."
