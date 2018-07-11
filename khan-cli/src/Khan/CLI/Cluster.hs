@@ -73,6 +73,8 @@ data Deploy = Deploy
     , dDomain       :: !Text
     , dVersion      :: !Version
     , dZones        :: [Char]
+    , dVpcLink      :: !(Maybe Text)
+    , dVpcGroups    :: [Text]
     , dGrace        :: !Integer
     , dMin          :: !Integer
     , dMax          :: !Integer
@@ -99,7 +101,11 @@ deployParser env = Deploy
         "Instance's DNS domain."
     <*> versionOption
     <*> stringOption "zones" (value [])
-         "Availability Zone suffixes the cluster will encompass."
+        "Availability Zone suffixes the cluster will encompass."
+    <*> optional (textOption "classiclink-vpc" mempty
+        "VPC ID to link instances to (using ClassicLink).")
+    <*> many (textOption "classiclink-group" mempty
+        "VPC security group to assign to the instance (if ClassicLink is enabled).")
     <*> integralOption "grace" (value 20)
         "Seconds after an auto scaling activity until healthchecks are activated."
     <*> integralOption "min" (value 3)
@@ -143,6 +149,11 @@ instance Options Deploy where
     validate Deploy{..} = do
         check dEnv   "--env must be specified."
         check dZones "--zones must be specified."
+
+        check (isJust dVpcLink && null dVpcGroups)
+                        "--classiclink-vpc requires at least one --classiclink-group"
+        check (not (null dVpcGroups) && isNothing dVpcLink)
+                        "--classiclink-group requires --classiclink-vpc"
 
         check (dMax < dMin)     "--max must be greater than or equal to --max."
         check (dDesired < dMin) "--desired must be greater than or equal to --min."
@@ -311,7 +322,7 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
 
         unless (null dBalance) balance
 
-        Config.create d ami dType
+        Config.create d ami dType dVpcLink dVpcGroups
         ASG.create d balancers dDomain zones dCooldown dDesired dGrace dMin dMax
 
         setupScalingPolicies appName dScaleUpCpu dScaleDownCpu
