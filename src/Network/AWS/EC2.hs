@@ -3851,6 +3851,7 @@ instance IsXML DescribeRegionsResponse where
 data DescribeSecurityGroups = DescribeSecurityGroups
     { dshGroupName :: [Text]
       -- ^ A list of group names.
+      -- NB: doesn't work for non-default VPCs, use 'dshFilter' instead.
     , dshGroupId   :: [Text]
       -- ^ A list of group ids.
     , dshFilter    :: [Filter]

@@ -71,19 +71,21 @@ instance ToError EC2ErrorResponse where
 
 instance IsXML EC2ErrorResponse
 
-data Protocol = TCP | UDP | ICMP
+data Protocol = TCP | UDP | ICMP | AnyProtocol
     deriving (Eq, Ord, Generic)
 
 instance Show Protocol where
     show TCP  = "tcp"
     show UDP  = "udp"
     show ICMP = "icmp"
+    show AnyProtocol = "-1"
 
 instance Read Protocol where
     readPrec = readAssocList
         [ ("tcp",  TCP)
         , ("udp",  UDP)
         , ("icmp", ICMP)
+        , ("-1",   AnyProtocol)
         ]
 
 instance IsQuery Protocol where
@@ -1328,10 +1330,10 @@ instance IsXML UserIdGroupPair where
 data IpPermissionType = IpPermissionType
     { iptIpProtocol :: !Protocol
       -- ^ The protocol.
-    , iptFromPort   :: !Integer
+    , iptFromPort   :: !(Maybe Integer)
       -- ^ The start of port range for the ICMP and UDP protocols, or an ICMP
       -- type number. A value of -1 indicates all ICMP types.
-    , iptToPort     :: !Integer
+    , iptToPort     :: !(Maybe Integer)
       -- ^ The end of port range for the ICMP and UDP protocols, or an ICMP
       -- code. A value of -1 indicates all ICMP codes for the given ICMP type.
     , iptGroups     :: [UserIdGroupPair]
