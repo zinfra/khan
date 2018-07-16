@@ -28,7 +28,7 @@ import           Text.Read
 
 -- | Currently supported version of the Route53 service.
 route53 :: Service
-route53 = Service Global version3 "route53" "2012-12-12"
+route53 = Service Global version3 "route53" "2013-04-01"
 
 -- | XML namespace to annotate Route53 elements with.
 route53NS :: ByteString
@@ -105,7 +105,7 @@ data Protocol = HTTP | TCP
 instance IsXML Protocol where
     xmlPickler = xpContent xpPrim
 
-data RecordType = A | AAAA | CNAME | MX | NS | PTR | SOA | SPF | SRV | TXT
+data RecordType = A | AAAA | CNAME | MX | NS | PTR | SOA | SPF | SRV | TXT | CAA
     deriving (Eq, Ord, Read, Show, Generic)
 
 instance IsXML RecordType where
