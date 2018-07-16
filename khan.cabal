@@ -39,6 +39,7 @@ library
       , Khan.Model.EC2.Image
       , Khan.Model.EC2.Instance
       , Khan.Model.EC2.SecurityGroup
+      , Khan.Model.EC2.VPC
       , Khan.Model.ELB.HealthCheck
       , Khan.Model.ELB.LoadBalancer
       , Khan.Model.ELB.LoadBalancerPolicy

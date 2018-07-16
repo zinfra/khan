@@ -35,7 +35,7 @@ data Launch = Launch
     , lDomain    :: !Text
     , lImage     :: Maybe Text
     , lNum       :: !Int
-    , lGroups    :: [Text]
+    , lGroups    :: [Text]            -- TODO: seems to be unused?
     , lType      :: !InstanceType
     , lOptimised :: !Bool
     , lZones     :: [Char]

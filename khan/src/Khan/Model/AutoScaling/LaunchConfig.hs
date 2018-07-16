@@ -21,6 +21,7 @@ module Khan.Model.AutoScaling.LaunchConfig
 import           Control.Monad
 import           Khan.Internal
 import qualified Khan.Model.EC2.SecurityGroup as Security
+import qualified Khan.Model.EC2.VPC           as VPC
 import           Khan.Prelude                 hiding (min, max)
 import           Network.AWS.AutoScaling      hiding (Filter)
 
@@ -29,12 +30,14 @@ create
     => a
     -> Text              -- ^ AMI
     -> InstanceType      -- ^ Instance type
-    -> Maybe Text        -- ^ VPC to link instances to
-    -> [Text]            -- ^ VPC security groups
+    -> Maybe VpcRef      -- ^ VPC to link instances to
+    -> [GroupRef]        -- ^ VPC security groups
     -> AWS ()
 create (names -> n@Names{..}) ami typ vpcLink vpcGroups = do
     say "Creating Launch Configuration {}" [appName]
     gs <- Security.defaults n
+    vpcGroupIds <- traverse Security.resolve vpcGroups
+    vpcLinkId   <- traverse VPC.resolve vpcLink
     c  <- sendCatch CreateLaunchConfiguration
         { clcBlockDeviceMappings     = mempty
         , clcEbsOptimized            = Nothing
@@ -49,8 +52,8 @@ create (names -> n@Names{..}) ami typ vpcLink vpcGroups = do
         , clcSecurityGroups          = Members gs
         , clcSpotPrice               = Nothing
         , clcUserData                = Nothing
-        , clcClassicLinkVPCId        = vpcLink
-        , clcClassicLinkVPCSecurityGroups = Members vpcGroups
+        , clcClassicLinkVPCId        = vpcLinkId
+        , clcClassicLinkVPCSecurityGroups = Members vpcGroupIds
         }
     verifyAS "AlreadyExists" c
 

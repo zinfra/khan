@@ -73,8 +73,8 @@ data Deploy = Deploy
     , dDomain       :: !Text
     , dVersion      :: !Version
     , dZones        :: [Char]
-    , dVpcLink      :: !(Maybe Text)
-    , dVpcGroups    :: [Text]
+    , dVpcLink      :: !(Maybe VpcRef)
+    , dVpcGroups    :: [GroupRef]
     , dGrace        :: !Integer
     , dMin          :: !Integer
     , dMax          :: !Integer
@@ -102,9 +102,9 @@ deployParser env = Deploy
     <*> versionOption
     <*> stringOption "zones" (value [])
         "Availability Zone suffixes the cluster will encompass."
-    <*> optional (textOption "classiclink-vpc" mempty
+    <*> optional (vpcRefOption "classiclink-vpc" mempty
         "VPC ID to link instances to (using ClassicLink).")
-    <*> many (textOption "classiclink-group" mempty
+    <*> many (groupRefOption "classiclink-group" mempty
         "VPC security group to assign to the instance (if ClassicLink is enabled).")
     <*> integralOption "grace" (value 20)
         "Seconds after an auto scaling activity until healthchecks are activated."

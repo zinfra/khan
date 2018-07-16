@@ -3,6 +3,7 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE LambdaCase          #-}
 
 -- Module      : Khan.Model.EC2.SecurityGroup
 -- Copyright   : (c) 2013 Brendan Hay <brendan.g.hay@gmail.com>
@@ -24,6 +25,7 @@ module Khan.Model.EC2.SecurityGroup
     , createDefaults
 
     -- * EC2 API
+    , resolve
     , find
     , create
     , delete
@@ -53,7 +55,18 @@ defaults (names -> Names{..}) =
 createDefaults :: Naming a => a -> AWS Bool
 createDefaults = fmap (any modified) . mapM create <=< defaults
 
-find :: Text -> AWS (Maybe SecurityGroupItemType)
+-- | Turn a 'GroupRef' into a group ID. Might error out.
+resolve
+    :: GroupRef
+    -> AWS Text
+resolve (GroupId s) = pure s
+resolve (GroupName s) = find s >>= \case
+    Nothing -> throwAWS "Couldn't find security group called {}" [s]
+    Just g  -> pure (sgitGroupId g)
+
+find
+    :: Text           -- ^ Group name
+    -> AWS (Maybe SecurityGroupItemType)
 find name = do
     say "Searching for Security Group {}" [name]
     groupMay <$> sendCatch (DescribeSecurityGroups [name] [] [])
@@ -61,7 +74,9 @@ find name = do
     groupMay (Right x) = headMay . toList $ dshrSecurityGroupInfo x
     groupMay (Left  _) = Nothing
 
-create :: Text -> AWS (Modified SecurityGroupItemType)
+create
+    :: Text           -- ^ Group name
+    -> AWS (Modified SecurityGroupItemType)
 create name = find name >>= maybe go (return . Unchanged)
   where
     go = do
@@ -72,7 +87,9 @@ create name = find name >>= maybe go (return . Unchanged)
         say "Security Group {}/{} created." [name, gid]
         return $ Changed grp
 
-delete :: Text -> AWS Bool
+delete
+    :: Text           -- ^ Group name
+    -> AWS Bool
 delete name = find name >>= maybe (return False) (const go)
   where
     go = do
@@ -84,7 +101,10 @@ delete name = find name >>= maybe (return False) (const go)
 -- FIXME: diff causes rules to be revoked before re-adding, due to shallow diff
 -- which doesn't inspect the inner UserIdGroupPairs, this could potentially cause
 -- a brief netsplit.
-update :: Text -> [IpPermissionType] -> AWS Bool
+update
+    :: Text           -- ^ Group name
+    -> [IpPermissionType]
+    -> AWS Bool
 update name (sort -> rules) = do
     SecurityGroupItemType{..} <- result <$> create name
 
