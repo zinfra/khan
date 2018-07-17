@@ -37,6 +37,8 @@ module Khan.Internal.Types
    , PolicyPath    (..)
    , Env           (_env)
    , Role          (_role)
+   , GroupRef      (..)
+   , VpcRef        (..)
 
    -- * Smart constructors
    , versioned
@@ -53,7 +55,7 @@ module Khan.Internal.Types
    ) where
 
 import           Data.Aeson
-import           Data.Aeson.Types             (Options(..), defaultOptions)
+import           Data.Aeson.Types             (Options(..))
 import           Data.HashMap.Strict          (HashMap)
 import qualified Data.HashMap.Strict          as Map
 import           Data.Hashable
@@ -308,3 +310,9 @@ stripText :: Text -> Text -> Text
 stripText x y =
     let z = fromMaybe y (Text.stripPrefix x y)
      in fromMaybe z (Text.stripSuffix x z)
+
+data GroupRef = GroupId Text | GroupName Text
+    deriving (Eq, Show)
+
+data VpcRef = VpcId Text | VpcName Text
+    deriving (Eq, Show)

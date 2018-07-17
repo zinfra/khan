@@ -3,7 +3,7 @@ packages:
 - '.'
 - location:
     git: https://github.com/zinfra/amazonka-limited
-    commit: ca851b771ccd083ce1be818f3760a530ece9f3f6
+    commit: e81b14a0bc236a956adceec7090f16b996d83ad3
   extra-dep: true
 extra-deps:
 - aeson-1.1.1.0

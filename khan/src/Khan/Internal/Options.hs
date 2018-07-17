@@ -53,6 +53,8 @@ module Khan.Internal.Options
     , userOption
     , instanceOption
     , rKeysOption
+    , groupRefOption
+    , vpcRefOption
 
     -- * Validation
     , check
@@ -277,6 +279,20 @@ rKeysOption env = RKeysBucket <$> textOption "remote-keys"
     ( etext "KHAN_RKEYS" env
    <> short 'K'
     ) "Bucket to retrieve/store certificates."
+
+groupRefOption :: String -> Mod OptionFields GroupRef -> String -> Parser GroupRef
+groupRefOption key = customOption key "ID|name:STR" (Right . parser . Text.pack)
+  where
+    parser s = case Text.stripPrefix "name:" s of
+      Nothing -> GroupId s
+      Just n  -> GroupName n
+
+vpcRefOption :: String -> Mod OptionFields VpcRef -> String -> Parser VpcRef
+vpcRefOption key = customOption key "ID|name:STR" (Right . parser . Text.pack)
+  where
+    parser s = case Text.stripPrefix "name:" s of
+      Nothing -> VpcId s
+      Just n  -> VpcName n
 
 check :: (MonadIO m, Invalid a) => a -> String -> ExceptT AWSError m ()
 check x = when (invalid x) . throwE . Err
