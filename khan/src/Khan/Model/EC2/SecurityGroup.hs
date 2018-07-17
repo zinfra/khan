@@ -69,7 +69,7 @@ find
     -> AWS (Maybe SecurityGroupItemType)
 find name = do
     say "Searching for Security Group {}" [name]
-    groupMay <$> sendCatch (DescribeSecurityGroups [name] [] [])
+    groupMay <$> sendCatch (DescribeSecurityGroups [] [] [Filter "group-name" [name]])
   where
     groupMay (Right x) = headMay . toList $ dshrSecurityGroupInfo x
     groupMay (Left  _) = Nothing
