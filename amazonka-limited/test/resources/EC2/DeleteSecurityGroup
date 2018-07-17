@@ -1,0 +1,8 @@
+GET /
+Action=DeleteSecurityGroup
+{% if dsgGroupId %}
+GroupId={{ dsgGroupId }}
+{% endif %}
+{% if dsgGroupName %}
+GroupName={{ dsgGroupName }}
+{% endif %}

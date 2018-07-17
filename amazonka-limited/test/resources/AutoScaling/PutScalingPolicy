@@ -1,0 +1,12 @@
+GET /
+Action=PutScalingPolicy
+AdjustmentType={{ pspAdjustmentType }}
+AutoScalingGroupName={{ pspAutoScalingGroupName }}
+{% if pspCooldown %}
+Cooldown={{ pspCooldown }}
+{% endif %}
+{% if pspMinAdjustmentStep %}
+MinAdjustmentStep={{ pspMinAdjustmentStep }}
+{% endif %}
+PolicyName={{ pspPolicyName }}
+ScalingAdjustment={{ pspScalingAdjustment }}

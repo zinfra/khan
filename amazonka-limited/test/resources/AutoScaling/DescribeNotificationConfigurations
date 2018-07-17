@@ -1,0 +1,11 @@
+GET /
+Action=DescribeNotificationConfigurations
+{% if dncAutoScalingGroupNames %}
+AutoScalingGroupNames.member.{{ n }}={{.}}
+{% endif %}
+{% if dncMaxRecords %}
+MaxRecords={{ dncMaxRecords }}
+{% endif %}
+{% if dncNextToken %}
+NextToken={{ dncNextToken }}
+{% endif %}

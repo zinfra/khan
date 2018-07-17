@@ -52,8 +52,9 @@ class TextParser a where
 instance TextParser IpPermissionType where
     parser = do
         p <- parser
-        f <- decimal <* char ':'
-        t <- decimal <* char ':'
+        (f, t) <- do
+            ps <- optional $ liftA2 (,) (decimal <* char ':') (decimal <* char ':')
+            pure (fst <$> ps, snd <$> ps)
         g <- sepBy1 (eitherP parser parser) (char ',')
         return . uncurry (IpPermissionType p f t)
                . swap
