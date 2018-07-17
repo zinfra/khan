@@ -1,0 +1,9 @@
+GET /
+Action=ExecutePolicy
+{% if epAutoScalingGroupName %}
+AutoScalingGroupName={{ epAutoScalingGroupName }}
+{% endif %}
+{% if epHonorCooldown %}
+HonorCooldown={{ epHonorCooldown }}
+{% endif %}
+PolicyName={{ epPolicyName }}

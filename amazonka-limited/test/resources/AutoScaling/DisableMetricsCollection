@@ -1,0 +1,6 @@
+GET /
+Action=DisableMetricsCollection
+AutoScalingGroupName={{ dmcAutoScalingGroupName }}
+{% if dmcMetrics %}
+Metrics.member.{{ n }}={{.}}
+{% endif %}

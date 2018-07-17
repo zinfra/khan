@@ -1,0 +1,6 @@
+GET /
+Action=ResumeProcesses
+AutoScalingGroupName={{ rpAutoScalingGroupName }}
+{% if rpScalingProcesses %}
+ScalingProcesses.member.{{ n }}={{.}}
+{% endif %}

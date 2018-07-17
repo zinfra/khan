@@ -1,0 +1,18 @@
+GET /
+Action=DescribeImages
+{% if djExecutableBy %}
+ExecutableBy.{{ n }}={{.}}
+{% endif %}
+{% if djFilter %}
+Filter.{{ n }}.Name={{ filterName }}
+{% if filterValue %}
+Filter.{{ n }}.Value.{{ o }}={{.}}
+{% endif %}
+{% endif %}
+{% if djImageId %}
+ImageId.{{ n }}={{.}}
+{% endif %}
+{% if djOwner %}
+Owner.{{ n }}={{.}}
+{% endif %}
+

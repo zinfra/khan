@@ -1,10 +1,9 @@
 resolver: lts-6.31
+
 packages:
 - '.'
-- location:
-    git: https://github.com/zinfra/amazonka-limited
-    commit: e81b14a0bc236a956adceec7090f16b996d83ad3
-  extra-dep: true
+- amazonka-limited
+
 extra-deps:
 - aeson-1.1.1.0
 - base-compat-0.9.3
@@ -18,4 +17,5 @@ extra-deps:
 - tagged-0.8.5
 - transformers-compat-0.5.1.4
 - trifecta-1.6.2.1
+
 allow-newer: true
