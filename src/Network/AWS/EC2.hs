@@ -346,8 +346,9 @@ module Network.AWS.EC2
     -- -- ** DescribeVpcAttribute
     -- , DescribeVpcAttribute                (..)
 
-    -- -- ** DescribeVpcs
-    -- , DescribeVpcs                        (..)
+    -- ** DescribeVpcs
+    , DescribeVpcs                           (..)
+    , DescribeVpcsResponse                   (..)
 
     -- -- ** DescribeVpnConnections
     -- , DescribeVpnConnections              (..)
@@ -4426,9 +4427,9 @@ instance IsXML DescribeTagsResponse where
 -- instance IsXML DescribeVpcAttributeResponse where
 --     xmlPickler = ec2XML
 
--- -- | Describes one or more of your VPCs.
--- --
--- -- <http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeVpcs.html>
+-- | Describes one or more of your VPCs.
+--
+-- <http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeVpcs.html>
 
 -- -- data VpcFilter
 -- --     , dxCidr            :: !Text
@@ -4459,27 +4460,29 @@ instance IsXML DescribeTagsResponse where
 -- --     , dxVpc-id          :: !Text
 -- --       -- ^
 
--- data DescribeVpcs = DescribeVpcs
---     { dwVpcId  :: Members Text
---       -- ^ One or more VPC IDs.
---     , dxFilter :: Members Text
---       -- ^ The name of a filter.
---     } deriving (Eq, Show, Generic)
+data DescribeVpcs = DescribeVpcs
+    { dvVpcId  :: [Text]
+      -- ^ One or more VPC IDs.
+    , dvFilter :: [Filter]
+      -- ^ The name of a filter.
+    } deriving (Eq, Show, Generic)
 
--- instance IsQuery DescribeVpcs
+instance IsQuery DescribeVpcs
 
--- instance AWSRequest EC2 DescribeVpcs DescribeVpcsResponse where
---     request = query4 ec2 GET "DescribeVpcs"
+instance Rq DescribeVpcs where
+    type Er DescribeVpcs = EC2ErrorResponse
+    type Rs DescribeVpcs = DescribeVpcsResponse
+    request = query4 ec2 GET "DescribeVpcs"
 
--- data DescribeVpcsResponse = DescribeVpcsResponse
---     { ecRequestId :: !Text
---       -- ^ The ID of the request.
---     , ecVpcSet    :: !VpcType
---       -- ^ A list of VPCs. Each VPC is wrapped in an item element.
---     } deriving (Eq, Show, Generic)
+data DescribeVpcsResponse = DescribeVpcsResponse
+    { dvrRequestId :: !Text
+      -- ^ The ID of the request.
+    , dvrVpcSet    :: ![VpcItemType]
+      -- ^ A list of VPCs.
+    } deriving (Eq, Show, Generic)
 
--- instance IsXML DescribeVpcsResponse where
---     xmlPickler = ec2XML
+instance IsXML DescribeVpcsResponse where
+    xmlPickler = ec2XML
 
 -- -- | Describes one or more of your VPN connections.For more information about
 -- -- VPN connections, see Adding a Hardware Virtual Private Gateway to Your VPC

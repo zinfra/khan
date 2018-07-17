@@ -2332,29 +2332,29 @@ instance IsXML TagSetItemType where
 -- instance IsXML VolumeStatusActionItemType where
 --     xmlPickler = ec2XML
 
--- data VpcType = VpcType
---     { vtVpcId           :: !Text
---       -- ^ The ID of the VPC.
---     , vtState           :: !Text
---       -- ^ The current state of the VPC.
---     , vtCidrBlock       :: !Text
---       -- ^ The CIDR block for the VPC.
---     , vtDhcpOptionsId   :: !Text
---       -- ^ The ID of the set of DHCP options you've associated with the VPC
---       -- (or default if the default options are associated with the VPC).
---     , vtTagSet          :: !ResourceTagSetItemType
---       -- ^ Any tags assigned to the resource, each one wrapped in an item
---       -- element.
---     , vtInstanceTenancy :: !Text
---       -- ^ The allowed tenancy of instances launched into the VPC.
---     , vtIsDefault       :: !Bool
---       -- ^ Indicates whether the VPC is the default VPC.
---     } deriving (Eq, Ord, Show, Generic)
+data VpcItemType = VpcItemType
+    { vitVpcId           :: !Text
+      -- ^ The ID of the VPC.
+    , vitState           :: !Text
+      -- ^ The current state of the VPC.
+    , vitCidrBlock       :: !Text
+      -- ^ The CIDR block for the VPC.
+    , vitDhcpOptionsId   :: !Text
+      -- ^ The ID of the set of DHCP options you've associated with the VPC
+      -- (or default if the default options are associated with the VPC).
+    , vitTagSet          :: [ResourceTagSetItemType]
+      -- ^ Any tags assigned to the resource, each one wrapped in an item
+      -- element.
+    , vitInstanceTenancy :: !Text
+      -- ^ The allowed tenancy of instances launched into the VPC.
+    , vitIsDefault       :: !Bool
+      -- ^ Indicates whether the VPC is the default VPC.
+    } deriving (Eq, Ord, Show, Generic)
 
--- instance IsQuery VpcType
+instance IsQuery VpcItemType
 
--- instance IsXML VpcType where
---     xmlPickler = ec2XML
+instance IsXML VpcItemType where
+    xmlPickler = ec2ItemXML
 
 -- data VpnConnectionOptions = VpnConnectionOptions
 --     { vcortStaticRoutesOnly :: !Bool
