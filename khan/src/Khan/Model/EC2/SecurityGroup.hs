@@ -45,7 +45,7 @@ import Network.AWS.EC2 hiding (Instance)
 
 sshAccess :: Naming a => a -> AWS Bool
 sshAccess (names -> Names{..}) = update groupName
-    [ IpPermissionType TCP 22 22 [] [IpRange "0.0.0.0/0"]
+    [ IpPermissionType TCP (Just 22) (Just 22) [] [IpRange "0.0.0.0/0"]
     ]
 
 defaults :: Naming a => a -> AWS [Text]
