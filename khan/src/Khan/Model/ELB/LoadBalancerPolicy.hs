@@ -46,13 +46,22 @@ sslPolicy balancer = CreateLoadBalancerPolicy
     { clbpLoadBalancerName = balancerNameText balancer
     , clbpPolicyName       = policyNameText $ mkPolicyName balancer typ
     , clbpPolicyTypeName   = policyTypeText typ
-    , clbpPolicyAttributes = Members [PolicyAttribute key val]
+    , clbpPolicyAttributes = Members $ map mkPolicyAttribute $ concat [protocol, ciphers]
     }
   where
     typ = PolicyType "SSLNegotiationPolicyType"
-    key = Just "Reference-Security-Policy"
-    val = Just "ELBSecurityPolicy-TLS-1-2-2017-01"
 
+    protocol = [ ("Protocol-TLSv1.2", "true") ]
+
+    ciphers  = [ ("Server-Defined-Cipher-Order", "true")
+               , ("ECDHE-RSA-AES256-GCM-SHA384", "true")
+               , ("ECDHE-RSA-AES256-SHA384", "true")
+               , ("ECDHE-RSA-AES128-GCM-SHA256", "true")
+               , ("ECDHE-RSA-AES128-SHA256", "true")
+               ]
+
+mkPolicyAttribute :: (Text, Text) -> PolicyAttribute
+mkPolicyAttribute (k, v) = PolicyAttribute (Just k) (Just v)
 
 proxyProtocolPolicy :: BalancerName -> CreateLoadBalancerPolicy
 proxyProtocolPolicy balancer = CreateLoadBalancerPolicy
@@ -65,7 +74,6 @@ proxyProtocolPolicy balancer = CreateLoadBalancerPolicy
     typ = PolicyType "ProxyProtocolPolicyType"
     key = Just "ProxyProtocol"
     val = Just "true"
-
 
 assign :: PolicyTarget a -> AWS ()
 
