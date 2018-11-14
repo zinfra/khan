@@ -371,6 +371,9 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     -- | convert version format
     -- dVersion is in the format 1.2.3+0
     -- EC2 tags contain the format 1.2.3/0
+    --
+    -- Text.replace could be used if it didn't threw errors when the search needle isn't found
+    -- There is some (slight) hope the extra +0 /0 suffix will eventually disappear.
     versionInFilter :: Text
     versionInFilter = pack $ repl <$> toString dVersion
       where
