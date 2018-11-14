@@ -23,6 +23,8 @@ import qualified Data.HashMap.Strict                 as Map
 import           Data.List                           (partition)
 import           Data.SemVer
 import           Khan.Internal
+import           Khan.CLI.Ansible                (Ansible(..), playbook)
+import qualified Filesystem.Path.CurrentOS       as Path
 import qualified Khan.Model.AutoScaling.LaunchConfig as Config
 import qualified Khan.Model.AutoScaling.ScalingGroup as ASG
 import qualified Khan.Model.EC2.AvailabilityZone     as AZ
@@ -342,6 +344,8 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     autoPromote = when dAutoPromote $ do
         say "Waiting {} seconds before auto-promoting" [dPromoteDelay]
         delaySeconds dPromoteDelay
+        say "Checking cluster {} has open ports..." [B dRole]
+        portCheck dRole dEnv
         say "Auto-promoting cluster {} at version {} in {}" [B dRole, B dVersion, B dEnv]
         promote c $ Cluster dRole dEnv dVersion
 
@@ -362,6 +366,20 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     Names{..} = names d
     balancers = map (Balancer.mkBalancerName d) dBalance
     zones     = map (AZ cRegion) dZones
+
+    portCheck :: Role -> Env -> AWS ()
+    portCheck r e = do
+        -- TODO: ensure inventory includes new servers...
+        let iPlaybook = Path.fromText "check_service_port.yml"
+            iArgs = []
+            -- TODO: maybe fix this so it's not hardcoded for staging.
+            iRKeys = RKeysBucket "invalid"
+            keyPath = Just $ Path.fromText "keys/eu-west-1_staging-khan.pem"
+        say "Running Playbook {}" [B iPlaybook]
+        playbook c $ Ansible e iRKeys keyPath Nothing 36000 False $ iArgs ++
+            [ "-e", ("service=" <> show r)
+            , Path.encodeString iPlaybook
+            ]
 
 promote :: Common -> Cluster -> AWS ()
 promote _ c@Cluster{..} = do
