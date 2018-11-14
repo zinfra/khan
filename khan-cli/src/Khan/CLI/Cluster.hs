@@ -21,7 +21,7 @@ import           Data.Conduit
 import qualified Data.Conduit.List                   as Conduit
 import qualified Data.HashMap.Strict                 as Map
 import           Data.List                           (partition, intercalate)
-import           Data.Text (unpack)
+import           Data.Text (pack, unpack)
 import           Data.SemVer
 import           Khan.Internal
 import           Khan.CLI.Ansible                    (Ansible(..), playbook)
@@ -346,7 +346,7 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
         say "Waiting {} seconds before auto-promoting" [dPromoteDelay]
         delaySeconds dPromoteDelay
         say "Checking cluster {} has open ports..." [B dRole]
-        portCheck dRole dEnv
+        portCheck
         say "Auto-promoting cluster {} at version {} in {}" [B dRole, B dVersion, B dEnv]
         promote c $ Cluster dRole dEnv dVersion
 
@@ -368,33 +368,45 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     balancers = map (Balancer.mkBalancerName d) dBalance
     zones     = map (AZ cRegion) dZones
 
-    getPrivateIps :: Role -> Env -> AWS [Text]
-    getPrivateIps iRole iEnv = do
-        say "Searching for Instances tagged with {} and {}" [B iRole, B iEnv]
+    -- | convert version format
+    -- dVersion is in the format 1.2.3+0
+    -- EC2 tags contain the format 1.2.3/0
+    versionInFilter :: Text
+    versionInFilter = pack $ repl <$> toString dVersion
+      where
+        repl '+'    = '/'
+        repl char   = char
+
+    getPrivateIps :: AWS [Text]
+    getPrivateIps = do
+        say "Searching for Instances tagged with {} and {} using version {}" [B dRole, B dEnv, B dVersion]
         ms <- Instance.findAll []
-            [ Tag.filter Tag.role [_role iRole]
-            , Tag.filter Tag.env  [_env  iEnv]
+            [ Tag.filter Tag.role [_role dRole]
+            , Tag.filter Tag.env  [_env  dEnv]
+              -- filter for the precise version, e.g. "staging-proxy_2.32.0/0"
+            , Tag.filter Tag.name [(_env  dEnv) <> "-" <> (_role dRole) <> "_" <> versionInFilter]
+              -- matching 'pending' instances would not help
+              -- since the playbook would anyway fail if the server is not ready yet.
             , ec2Filter "instance-state-name" ["running"]
             , ec2Filter "tag-key" [Tag.group]
             ]
         let privateIps = catMaybes $ riitPrivateIpAddress <$> ms
+        -- fail if not all instances are up, we then don't want to promote
+        when (fromIntegral (length privateIps) /= dDesired) $
+            throwAWS "Unable to find any running instances matching \
+                    \ privateIPs for role={} env={} using version {}"
+                    [B dRole, B dEnv, B dVersion]
         return privateIps
 
-    portCheck :: Role -> Env -> AWS ()
-    portCheck r e = do
-        ips <- getPrivateIps r e
+    portCheck :: AWS ()
+    portCheck = do
+        ips <- getPrivateIps
         let inventory = intercalate "," (unpack <$> ips)
             iPlaybook = Path.fromText "check_service_port.yml"
-            iArgs = []
-            -- TODO: maybe fix RKeys and set keyPath to Nothing, so it's not hardcoded for staging.
-            iRKeys = RKeysBucket "invalid"
-            keyPath = Just $ Path.fromText "keys/eu-west-1_staging-khan.pem"
         say "Running Playbook {}" [B iPlaybook]
-        playbook c $ Ansible e iRKeys keyPath Nothing 36000 False $ iArgs ++
-            [ "-e", "service=" <> unpack (_role r)
+        playbook c $ Ansible dEnv dRKeys Nothing Nothing 36000 False $
+            [ "-e", "service=" <> unpack (_role dRole)
             , "-e", "target_hosts=all"
-            , "-e", "khan_region_abbrev=ie"
-            , "-u", "ubuntu"
             , "-i", inventory <> ","
             , Path.encodeString iPlaybook
             ]
