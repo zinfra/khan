@@ -21,6 +21,7 @@ import           Data.Conduit
 import qualified Data.Conduit.List                   as Conduit
 import qualified Data.HashMap.Strict                 as Map
 import           Data.List                           (partition)
+import Data.Text (unpack)
 import           Data.SemVer
 import           Khan.Internal
 import           Khan.CLI.Ansible                (Ansible(..), playbook)
@@ -372,12 +373,12 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
         -- TODO: ensure inventory includes new servers...
         let iPlaybook = Path.fromText "check_service_port.yml"
             iArgs = []
-            -- TODO: maybe fix this so it's not hardcoded for staging.
+            -- TODO: maybe fix RKeys and set keyPath to Nothing, so it's not hardcoded for staging.
             iRKeys = RKeysBucket "invalid"
             keyPath = Just $ Path.fromText "keys/eu-west-1_staging-khan.pem"
         say "Running Playbook {}" [B iPlaybook]
         playbook c $ Ansible e iRKeys keyPath Nothing 36000 False $ iArgs ++
-            [ "-e", ("service=" <> show r)
+            [ "-e", "service=" <> unpack (_role r)
             , Path.encodeString iPlaybook
             ]
 
