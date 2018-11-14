@@ -48,6 +48,7 @@ import           Network.AWS.CloudWatch
 import           Network.AWS.EC2                     hiding (Filter)
 import           Network.AWS.ELB
 import           Network.AWS.Route53                 hiding (Protocol(..))
+import Data.List (intercalate)
 
 data Info = Info
     { iRole :: !Role
@@ -368,10 +369,23 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     balancers = map (Balancer.mkBalancerName d) dBalance
     zones     = map (AZ cRegion) dZones
 
+    getPrivateIps :: Role -> Env -> AWS [Text]
+    getPrivateIps iRole iEnv = do
+        say "Searching for Instances tagged with {} and {}" [B iRole, B iEnv]
+        ms <- Instance.findAll []
+            [ Tag.filter Tag.role [_role iRole]
+            , Tag.filter Tag.env  [_env  iEnv]
+            , ec2Filter "instance-state-name" ["running"]
+            , ec2Filter "tag-key" [Tag.group]
+            ]
+        let privateIps = catMaybes $ riitPrivateIpAddress <$> ms
+        return privateIps
+
     portCheck :: Role -> Env -> AWS ()
     portCheck r e = do
-        -- TODO: ensure inventory includes new servers...
-        let iPlaybook = Path.fromText "check_service_port.yml"
+        ips <- getPrivateIps r e
+        let inventory = intercalate "," (unpack <$> ips)
+            iPlaybook = Path.fromText "check_service_port.yml"
             iArgs = []
             -- TODO: maybe fix RKeys and set keyPath to Nothing, so it's not hardcoded for staging.
             iRKeys = RKeysBucket "invalid"
@@ -379,6 +393,10 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
         say "Running Playbook {}" [B iPlaybook]
         playbook c $ Ansible e iRKeys keyPath Nothing 36000 False $ iArgs ++
             [ "-e", "service=" <> unpack (_role r)
+            , "-e", "target_hosts=all"
+            , "-e", "khan_region_abbrev=ie"
+            , "-u", "ubuntu"
+            , "-i", inventory <> ","
             , Path.encodeString iPlaybook
             ]
 
