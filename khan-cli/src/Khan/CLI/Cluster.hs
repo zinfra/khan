@@ -20,12 +20,12 @@ import           Control.Arrow
 import           Data.Conduit
 import qualified Data.Conduit.List                   as Conduit
 import qualified Data.HashMap.Strict                 as Map
-import           Data.List                           (partition)
-import Data.Text (unpack)
+import           Data.List                           (partition, intercalate)
+import           Data.Text (unpack)
 import           Data.SemVer
 import           Khan.Internal
-import           Khan.CLI.Ansible                (Ansible(..), playbook)
-import qualified Filesystem.Path.CurrentOS       as Path
+import           Khan.CLI.Ansible                    (Ansible(..), playbook)
+import qualified Filesystem.Path.CurrentOS           as Path
 import qualified Khan.Model.AutoScaling.LaunchConfig as Config
 import qualified Khan.Model.AutoScaling.ScalingGroup as ASG
 import qualified Khan.Model.EC2.AvailabilityZone     as AZ
@@ -48,7 +48,6 @@ import           Network.AWS.CloudWatch
 import           Network.AWS.EC2                     hiding (Filter)
 import           Network.AWS.ELB
 import           Network.AWS.Route53                 hiding (Protocol(..))
-import Data.List (intercalate)
 
 data Info = Info
     { iRole :: !Role
