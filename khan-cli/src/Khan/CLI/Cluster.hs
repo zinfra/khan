@@ -21,7 +21,7 @@ import           Data.Conduit
 import qualified Data.Conduit.List                   as Conduit
 import qualified Data.HashMap.Strict                 as Map
 import           Data.List                           (partition, intercalate)
-import           Data.Text (pack, unpack)
+import           Data.Text                           (pack, unpack, replace)
 import           Data.SemVer
 import           Khan.Internal
 import           Khan.CLI.Ansible                    (Ansible(..), playbook)
@@ -371,14 +371,8 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     -- | convert version format
     -- dVersion is in the format 1.2.3+0
     -- EC2 tags contain the format 1.2.3/0
-    --
-    -- Text.replace could be used if it didn't threw errors when the search needle isn't found
-    -- There is some (slight) hope the extra +0 /0 suffix will eventually disappear.
     versionInFilter :: Text
-    versionInFilter = pack $ repl <$> toString dVersion
-      where
-        repl '+'    = '/'
-        repl char   = char
+    versionInFilter = replace "+" "/" $ toText dVersion
 
     getPrivateIps :: AWS [Text]
     getPrivateIps = do
@@ -397,8 +391,8 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
         -- fail if not all instances are up, we then don't want to promote
         when (fromIntegral (length privateIps) /= dDesired) $
             throwAWS "Unable to find any running instances matching \
-                    \ privateIPs for role={} env={} using version {}"
-                    [B dRole, B dEnv, B dVersion]
+                     \privateIPs for role={} env={} using version {}"
+                     [B dRole, B dEnv, B dVersion]
         return privateIps
 
     portCheck :: AWS ()
@@ -410,6 +404,8 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
         playbook c $ Ansible dEnv dRKeys Nothing Nothing 36000 False $
             [ "-e", "service=" <> unpack (_role dRole)
             , "-e", "target_hosts=all"
+            -- pass comma-separated inventory with trailing comma, see
+            -- https://stackoverflow.com/questions/33317628/how-does-inventory-option-in-ansible-work-when-it-is-given-value-with-a-traili
             , "-i", inventory <> ","
             , Path.encodeString iPlaybook
             ]
