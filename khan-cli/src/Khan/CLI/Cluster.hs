@@ -421,8 +421,9 @@ promote common c@Cluster{..} = do
         let privateIps = catMaybes $ riitPrivateIpAddress <$> ms
         -- fail if not all instances are up, we then don't want to promote
         when (fromIntegral (length privateIps) /= asgDesiredCapacity (annValue asg)) $
-            throwAWS "Unable to find any running instances matching \
-                     \privateIPs for role={} env={} using version {}"
+            throwAWS "ABORTING promote: Unable to find desired amount of *running* instances \
+                     \matching privateIPs for role={} env={} using version {}.\n\
+                     \Perhaps wait a little longer or check for problems with this ASG in the AWS console."
                      [B cRole, B cEnv, B cVersion]
         return privateIps
 
