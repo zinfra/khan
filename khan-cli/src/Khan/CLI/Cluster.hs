@@ -21,7 +21,7 @@ import           Data.Conduit
 import qualified Data.Conduit.List                   as Conduit
 import qualified Data.HashMap.Strict                 as Map
 import           Data.List                           (partition, intercalate)
-import           Data.Text                           (pack, unpack, replace)
+import           Data.Text                           (unpack, replace)
 import           Data.SemVer
 import           Khan.Internal
 import           Khan.CLI.Ansible                    (Ansible(..), playbook)
@@ -222,6 +222,7 @@ data Cluster = Cluster
     { cRole    :: !Role
     , cEnv     :: !Env
     , cVersion :: !Version
+    , cRKeys   :: !RKeysBucket
     }
 
 clusterParser :: EnvMap -> Parser Cluster
@@ -229,6 +230,7 @@ clusterParser env = Cluster
     <$> roleOption
     <*> envOption env
     <*> versionOption
+    <*> rKeysOption env
 
 instance Options Cluster
 
@@ -345,10 +347,8 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     autoPromote = when dAutoPromote $ do
         say "Waiting {} seconds before auto-promoting" [dPromoteDelay]
         delaySeconds dPromoteDelay
-        say "Checking cluster {} has open ports..." [B dRole]
-        portCheck
         say "Auto-promoting cluster {} at version {} in {}" [B dRole, B dVersion, B dEnv]
-        promote c $ Cluster dRole dEnv dVersion
+        promote c $ Cluster dRole dEnv dVersion dRKeys
 
     autoRetire = when dAutoRetire $ do
         say "Waiting {} seconds before auto-retiring" [dRetireDelay]
@@ -360,7 +360,7 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
             $$ Conduit.consume
         forM_ vs $ \v -> do
             say "Auto-retiring cluster {} at version {} in {}" [B dRole, B v, B dEnv]
-            retire c $ Cluster dRole dEnv v
+            retire c $ Cluster dRole dEnv v dRKeys
 
     matchTags Tags{..} = tagEnv == dEnv && dRole == tagRole && Just dVersion /= tagVersion
 
@@ -368,50 +368,8 @@ deploy c@Common{..} d@Deploy{..} = ensure >> create >> autoPromote >> autoRetire
     balancers = map (Balancer.mkBalancerName d) dBalance
     zones     = map (AZ cRegion) dZones
 
-    -- | convert version format
-    -- dVersion is in the format 1.2.3+0
-    -- EC2 tags contain the format 1.2.3/0
-    versionInFilter :: Text
-    versionInFilter = replace "+" "/" $ toText dVersion
-
-    getPrivateIps :: AWS [Text]
-    getPrivateIps = do
-        say "Searching for Instances tagged with {} and {} using version {}" [B dRole, B dEnv, B dVersion]
-        ms <- Instance.findAll []
-            [ Tag.filter Tag.role [_role dRole]
-            , Tag.filter Tag.env  [_env  dEnv]
-              -- filter for the precise version, e.g. "staging-proxy_2.32.0/0"
-            , Tag.filter Tag.name [(_env  dEnv) <> "-" <> (_role dRole) <> "_" <> versionInFilter]
-              -- matching 'pending' instances would not help
-              -- since the playbook would anyway fail if the server is not ready yet.
-            , ec2Filter "instance-state-name" ["running"]
-            , ec2Filter "tag-key" [Tag.group]
-            ]
-        let privateIps = catMaybes $ riitPrivateIpAddress <$> ms
-        -- fail if not all instances are up, we then don't want to promote
-        when (fromIntegral (length privateIps) /= dDesired) $
-            throwAWS "Unable to find any running instances matching \
-                     \privateIPs for role={} env={} using version {}"
-                     [B dRole, B dEnv, B dVersion]
-        return privateIps
-
-    portCheck :: AWS ()
-    portCheck = do
-        ips <- getPrivateIps
-        let inventory = intercalate "," (unpack <$> ips)
-            iPlaybook = Path.fromText "check_service_port.yml"
-        say "Running Playbook {}" [B iPlaybook]
-        playbook c $ Ansible dEnv dRKeys Nothing Nothing 36000 False $
-            [ "-e", "service=" <> unpack (_role dRole)
-            , "-e", "target_hosts=all"
-            -- pass comma-separated inventory with trailing comma, see
-            -- https://stackoverflow.com/questions/33317628/how-does-inventory-option-in-ansible-work-when-it-is-given-value-with-a-traili
-            , "-i", inventory <> ","
-            , Path.encodeString iPlaybook
-            ]
-
 promote :: Common -> Cluster -> AWS ()
-promote _ c@Cluster{..} = do
+promote common c@Cluster{..} = do
     gs <- ASG.findAll []
         $= Conduit.mapMaybe Tag.annotate
         $= Conduit.filter (matchTags . annTags)
@@ -420,6 +378,9 @@ promote _ c@Cluster{..} = do
     (next, prev) <- targets gs
 
     let name = asgAutoScalingGroupName (annValue next)
+
+    say "Checking cluster {} has open ports..." [B cRole]
+    portCheck next
 
     promote' name next
     rebalance next
@@ -437,6 +398,49 @@ promote _ c@Cluster{..} = do
             = return (x, xs ++ ys)
         | otherwise
             = throwAWS "Unable to find Auto Scaling Group Version {}." [cVersion]
+
+    -- | convert version format
+    -- cVersion is in the format 1.2.3+0
+    -- EC2 tags contain the format 1.2.3/0
+    versionInFilter :: Text
+    versionInFilter = replace "+" "/" $ toText cVersion
+
+    getPrivateIps :: Ann AutoScalingGroup -> AWS [Text]
+    getPrivateIps asg = do
+        say "Searching for Instances tagged with {} and {} using version {}" [B cRole, B cEnv, B cVersion]
+        ms <- Instance.findAll []
+            [ Tag.filter Tag.role [_role cRole]
+            , Tag.filter Tag.env  [_env  cEnv]
+              -- filter for the precise version, e.g. "staging-proxy_2.32.0/0"
+            , Tag.filter Tag.name [(_env  cEnv) <> "-" <> (_role cRole) <> "_" <> versionInFilter]
+              -- matching 'pending' instances would not help
+              -- since the playbook would anyway fail if the server is not ready yet.
+            , ec2Filter "instance-state-name" ["running"]
+            , ec2Filter "tag-key" [Tag.group]
+            ]
+        let privateIps = catMaybes $ riitPrivateIpAddress <$> ms
+        -- fail if not all instances are up, we then don't want to promote
+        when (fromIntegral (length privateIps) /= asgDesiredCapacity (annValue asg)) $
+            throwAWS "ABORTING promote: Unable to find desired amount of *running* instances \
+                     \matching privateIPs for role={} env={} using version {}.\n\
+                     \Perhaps wait a little longer or check for problems with this ASG in the AWS console."
+                     [B cRole, B cEnv, B cVersion]
+        return privateIps
+
+    portCheck :: Ann AutoScalingGroup ->  AWS ()
+    portCheck asg = do
+        ips <- getPrivateIps asg
+        let inventory = intercalate "," (unpack <$> ips)
+            iPlaybook = Path.fromText "check_service_port.yml"
+        say "Running Playbook {}" [B iPlaybook]
+        playbook common $ Ansible cEnv cRKeys Nothing Nothing 36000 False $
+            [ "-e", "service=" <> unpack (_role cRole)
+            , "-e", "target_hosts=all"
+            -- pass comma-separated inventory with trailing comma, see
+            -- https://stackoverflow.com/questions/33317628/how-does-inventory-option-in-ansible-work-when-it-is-given-value-with-a-traili
+            , "-i", inventory <> ","
+            , Path.encodeString iPlaybook
+            ]
 
     rebalance next = do
         let dom = tagDomain $ annTags next
@@ -512,6 +516,12 @@ retire _ c@Cluster{..} = do
     ag <- ASG.find c >>= noteAWS "Unable to find Auto Scaling Group {}" [appName]
         . join
         . fmap Tag.annotate
+    let weight = tagWeight (annTags ag)
+    when (weight /= 0) $
+        throwAWS "REFUSING to retire ASG with non-zero weight. \
+                 \Check for typos in the version! Did you mean to retire {}? \
+                 \(or promote another ASG first)"
+                 [cVersion]
     dg <- async $ ASG.delete c >> Config.delete c >> deleteAlarms
     let elbs = Balancer.balancerNamesFromASG (annValue ag)
     ab <- if null elbs
