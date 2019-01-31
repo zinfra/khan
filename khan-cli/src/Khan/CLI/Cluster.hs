@@ -93,6 +93,7 @@ data Deploy = Deploy
     , dRetireDelay  :: !Int
     , dScaleUpCpu   :: !Integer
     , dScaleDownCpu :: !Integer
+    , dForceGundeck :: !Bool
     }
 
 deployParser :: EnvMap -> Parser Deploy
@@ -136,6 +137,8 @@ deployParser env = Deploy
         "Average CPU load threshold percentage after which to scale up."
     <*> integralOption "scale-down-cpu" (value 30)
         "Average CPU load threshold percentage after which to scale down."
+    <*> switchOption "force-gundeck" False
+        "Allow non-c3.large instance types for gundeck."
 
 instance Options Deploy where
     discover _ Common{..} d@Deploy{..} = do
@@ -169,6 +172,7 @@ instance Options Deploy where
 
         checkFile (_trust  dTrust)  " specified by --trust must exist."
         checkFile (_policy dPolicy) " specified by --policy must exist."
+        check (dEnv == "prod" && dRole == "gundeck" && dType /= C3_Large && (not dForceGundeck)) " gundeck should use c3.large as instance type in prod. Use --instance c3.large."
 
 instance Naming Deploy where
     names Deploy{..} = versioned dRole dEnv dVersion
