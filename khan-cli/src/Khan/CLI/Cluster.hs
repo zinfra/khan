@@ -172,7 +172,7 @@ instance Options Deploy where
 
         checkFile (_trust  dTrust)  " specified by --trust must exist."
         checkFile (_policy dPolicy) " specified by --policy must exist."
-        check (dEnv == "prod" && dRole == "gundeck" && dType /= C3_Large && (not dForceGundeck)) " gundeck should use c3.large as instance type in prod. Use --instance c3.large."
+        check (dEnv == "prod" && dRole == "gundeck" && dType /= M3_Large && (not dForceGundeck)) " gundeck should use m3.large as instance type in prod. Use --instance m3.large."
 
 instance Naming Deploy where
     names Deploy{..} = versioned dRole dEnv dVersion
