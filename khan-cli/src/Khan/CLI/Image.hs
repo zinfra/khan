@@ -178,6 +178,6 @@ image c@Common{..} d@Image{..} = do
 -- | Catch all exceptions and all 'Nothing's returned for about 2 minutes, then result in
 -- whatever the action insists on doing.
 bePatientWithAws :: (MonadIO m, MonadMask m) => m (Maybe a) -> m (Maybe a)
-bePatientWithAws act = retrying policy (const $ pure . isJust) $
+bePatientWithAws act = retrying policy (const $ pure . isNothing) $
                           const (recoverAll policy (const act))
   where policy = exponentialBackoff (1000000 {- microseconds -}) <> limitRetries 7
