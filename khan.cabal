@@ -143,9 +143,11 @@ executable khan
       , bytestring
       , conduit
       , errors
+      , exceptions
       , khan
       , optparse-applicative
       , process
+      , retry
       , semigroups
       , semver
       , system-fileio

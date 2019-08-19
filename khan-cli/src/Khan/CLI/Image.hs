@@ -15,6 +15,8 @@
 
 module Khan.CLI.Image (commands) where
 
+import           Control.Monad.Catch
+import           Control.Retry
 import qualified Data.Aeson                      as Aeson
 import qualified Data.ByteString.Lazy.Char8      as LBS
 import           Data.SemVer
@@ -135,7 +137,8 @@ image c@Common{..} d@Image{..} = do
 
     e <- contextAWS c $ do
         say "Finding public DNS for {}" [iid]
-        maddr    <- join . fmap (Instance.address cVPN) <$> Instance.find iid
+        maddr    <- bePatientWithAws $ join . fmap (Instance.address cVPN) <$> Instance.find iid
+
         (_, dns) <- noteAWS "Failed to retrieve Address for {}" [iid] maddr
 
         p <- SSH.wait iTimeout dns iUser key
@@ -171,3 +174,10 @@ image c@Common{..} d@Image{..} = do
         , bdmitEbs         = Nothing
         , bdmitNoDevice    = Nothing
         }
+
+-- | Catch all exceptions and all 'Nothing's returned for about 2 minutes, then result in
+-- whatever the action insists on doing.
+bePatientWithAws :: (MonadIO m, MonadMask m) => m (Maybe a) -> m (Maybe a)
+bePatientWithAws act = retrying policy (const $ pure . isNothing) $
+                          const (recoverAll policy (const act))
+  where policy = exponentialBackoff (1000000 {- microseconds -}) <> limitRetries 7
