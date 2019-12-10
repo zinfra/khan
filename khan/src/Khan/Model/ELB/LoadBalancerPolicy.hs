@@ -53,11 +53,12 @@ sslPolicy balancer = CreateLoadBalancerPolicy
 
     protocol = [ ("Protocol-TLSv1.2", "true") ]
 
+    -- ciphers are advertised from bottom to top (it appears?)
     ciphers  = [ ("Server-Defined-Cipher-Order", "true")
-               , ("ECDHE-RSA-AES256-GCM-SHA384", "true")
+               , ("ECDHE-RSA-AES128-SHA256", "true")
                , ("ECDHE-RSA-AES256-SHA384", "true")
                , ("ECDHE-RSA-AES128-GCM-SHA256", "true")
-               , ("ECDHE-RSA-AES128-SHA256", "true")
+               , ("ECDHE-RSA-AES256-GCM-SHA384", "true")
                ]
 
 mkPolicyAttribute :: (Text, Text) -> PolicyAttribute
