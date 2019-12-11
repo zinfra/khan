@@ -4,6 +4,7 @@ VERSION      := $(shell sed -n 's/^version: *\(.*\)$$/\1/p' $(NAME).cabal)
 BUILD_NUMBER ?= 0
 BUILD        := $(BUILD_NUMBER)$(shell [ "${BUILD_LABEL}" == "" ] && echo "" || echo ".${BUILD_LABEL}")
 DEB          := $(NAME)_$(VERSION)+$(BUILD_NUMBER)_amd64.deb
+DOCKER       ?= false
 
 OUT_CLI      := dist/$(NAME)
 OUT_SYNC     := dist/khan-metadata-sync
@@ -27,8 +28,16 @@ compile:
 	stack build --test --no-copy-bins
 
 .PHONY: install
+ifeq ($(DOCKER),true)
+install: init
+	docker run --rm \
+		-v $(CURDIR):/src \
+		mitchty/alpine-ghc:7.10 \
+		sh -c 'apk update && apk add build-base xz ncurses zlib-dev ca-certificates && cd /src && stack --system-ghc --local-bin-path=dist --allow-different-user install --flag khan:static'
+else
 install: init
 	stack install --test --local-bin-path=dist
+endif
 
 .PHONY: dist
 dist: install $(DEB) .metadata
