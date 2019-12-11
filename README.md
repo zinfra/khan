@@ -1,5 +1,29 @@
 # Khan
 
+## Installing khan locally
+
+Install with either:
+
+```sh
+# produces a dynamically-linked executable, requires stack and ghc
+make install
+```
+
+or, if you have no way of getting outdated ghc-7.10.3 on your system
+
+```sh
+# produces a static binary
+DOCKER=true make install
+```
+
+which will produce a binary under `./dist/khan`. Move that to your path.
+
+Otherwise get it using:
+
+```
+curl https://s3-eu-west-1.amazonaws.com/public.wire.com/artifacts/khan-static-x86_64-0.4.31 > khan && chmod +x khan
+```
+
 ## Table of Contents
 
 * [Contribute](#contribute)
