@@ -55,9 +55,7 @@ sslPolicy balancer = CreateLoadBalancerPolicy
 
     ciphers  = [ ("Server-Defined-Cipher-Order", "true")
                , ("ECDHE-RSA-AES256-GCM-SHA384", "true")
-               , ("ECDHE-RSA-AES256-SHA384", "true")
                , ("ECDHE-RSA-AES128-GCM-SHA256", "true")
-               , ("ECDHE-RSA-AES128-SHA256", "true")
                ]
 
 mkPolicyAttribute :: (Text, Text) -> PolicyAttribute
