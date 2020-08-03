@@ -1,9 +1,9 @@
 SHELL        := /usr/bin/env bash
 NAME         := khan
-VERSION      := $(shell sed -n 's/^version: *\(.*\)$$/\1/p' $(NAME).cabal)
+VERSION      ?=
 BUILD_NUMBER ?= 0
 BUILD        := $(BUILD_NUMBER)$(shell [ "${BUILD_LABEL}" == "" ] && echo "" || echo ".${BUILD_LABEL}")
-DEB          := $(NAME)_$(VERSION)+$(BUILD_NUMBER)_amd64.deb
+DEB          := $(NAME)_$(VERSION)+$(BUILD)_amd64.deb
 DOCKER       ?= false
 
 OUT_CLI      := dist/$(NAME)
@@ -12,7 +12,9 @@ OUT          := $(OUT_CLI) $(OUT_SYNC)
 
 default: all
 
-all: clean install link
+#all: clean install link
+all:
+	echo $(DEB)
 
 init:
 	mkdir -p dist
@@ -52,7 +54,7 @@ $(DEB): $(OUT)
 	makedeb --name=$(NAME) \
 	 --version=$(VERSION) \
 	 --debian-dir=deb \
-	 --build=$(BUILD_NUMBER) \
+	 --build=$(BUILD) \
 	 --architecture=amd64 \
 	 --output-dir=dist
 
