@@ -10,6 +10,12 @@ OUT_CLI      := dist/$(NAME)
 OUT_SYNC     := dist/khan-metadata-sync
 OUT          := $(OUT_CLI) $(OUT_SYNC)
 
+guard-%:
+	@ if [ "${${*}}" = "" ]; then \
+	    echo "Environment variable $* not set"; \
+	    exit 1; \
+	fi
+
 default: all
 
 #all: clean install link
@@ -42,7 +48,7 @@ install: init
 endif
 
 .PHONY: dist
-dist: install $(DEB) .metadata
+dist: guard-VERSION install $(DEB) .metadata
 
 $(OUT_CLI): $(BIN_CLI)
 	strip -o $(OUT_CLI) $<
@@ -50,7 +56,7 @@ $(OUT_CLI): $(BIN_CLI)
 $(OUT_SYNC): $(BIN_SYNC)
 	strip -o $(OUT_SYNC) $<
 
-$(DEB): $(OUT)
+$(DEB): guard-VERSION $(OUT)
 	makedeb --name=$(NAME) \
 	 --version=$(VERSION) \
 	 --debian-dir=deb \
